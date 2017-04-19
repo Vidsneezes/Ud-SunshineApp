@@ -23,7 +23,10 @@ import android.widget.TextView;
 
 import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.utilities.NetworkUtils;
+import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
 import com.example.android.sunshine.utilities.SunshineDateUtils;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.net.URL;
@@ -52,30 +55,40 @@ public class MainActivity extends AppCompatActivity {
 
     // TODO (8) Create a method that will get the user's preferred location and execute your new AsyncTask and call it loadWeatherData
     private  void LoadWatherData(){
-        String location = SunshinePreferences.getPreferredWeatherLocation(null);
-        URL locationUrl = NetworkUtils.buildUrl(location);
-        new FetchWeatherTask().execute(locationUrl);
+        String location = SunshinePreferences.getPreferredWeatherLocation(this);
+        new FetchWeatherTask().execute(location);
     }
 
     // TODO (5) Create a class that extends AsyncTask to perform network requests
     // TODO (6) Override the doInBackground method to perform your network requests
     // TODO (7) Override the onPostExecute method to display the results of the network request
-    public class FetchWeatherTask extends AsyncTask<URL, Void, String>{
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
 
         @Override
-        protected String doInBackground(URL... urls) {
-            URL locationUrl = urls[0];
-            String forcastResult = null;
+        protected String[] doInBackground(String... params) {
+            if(params.length == 0){
+                return  null;
+            }
+
+            String location = params[0];
+
+            URL weatherRequestUrl = NetworkUtils.buildUrl(location);
+
             try {
-                forcastResult = NetworkUtils.getResponseFromHttpUrl(locationUrl);
+                String jsonWeatherResponse = NetworkUtils.getResponseFromHttpUrl(weatherRequestUrl);
+                String[] simpleJsonWeatherData = OpenWeatherJsonUtils.getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
+                return  simpleJsonWeatherData;
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            return null;
+            return  null;
+
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(String[] weatherData) {
             if(s != null && !s.equals("")) {
                 mWeatherTextView.setText(s);
             }
