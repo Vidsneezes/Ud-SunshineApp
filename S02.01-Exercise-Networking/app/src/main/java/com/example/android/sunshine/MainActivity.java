@@ -89,8 +89,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String[] weatherData) {
-            if(s != null && !s.equals("")) {
-                mWeatherTextView.setText(s);
+            if(weatherData != null){
+                for (String weatherString : weatherData){
+                    mWeatherTextView.append((weatherString) + "\n\n\n");
+                }
             }
         }
     }
